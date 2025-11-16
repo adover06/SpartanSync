@@ -1,8 +1,12 @@
 from flask import render_template
 from flask import redirect
 from flask import flash
-from .forms import LoginForm
+from app.forms import LoginForm
 from app import myapp_obj
+
+from flask import render_template
+from . import bp
+
 
 
 @myapp_obj.route("/")
@@ -79,13 +83,7 @@ def home():
     }
     return render_template('home.html', classes=tempData['classes'], assignments=tempData['assignments'])
 
-@myapp_obj.route("/login", methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        flash(f'Here are the input {form.username.data} and {form.password.data}')
-        return redirect('/')
-    return render_template('login.html', form=form)
+
 
 @myapp_obj.route("/assign")
 def assign():
