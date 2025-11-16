@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Create Assignment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800">
+    <div class="max-w-3xl mx-auto p-6">
+
+        <div class="text-center mb-8">
+         <h1 class="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">Spartan LMS</h1>
+      </div>
+
+      <aside class="fixed left-0 top-0 h-screen w-56 bg-gray-900 text-gray-100 shadow-lg p-4 overflow-auto z-40">
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-100">Navigation</h2>
+        </div>
+
+        <nav aria-label="Sidebar" class="space-y-2">
+            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
+                    <i class="fa fa-house"></i>
+                </div>
+                <div class="text-sm font-medium">Home</div>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
+                    <i class="fa fa-cog"></i>
+                </div>
+                <div class="text-sm font-medium">Settings</div>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
+                    <i class="fa fa-envelope"></i>
+                </div>
+                <div class="text-sm font-medium">Messages</div>
+            </a>
+        </nav>
+    </aside>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-semibold text-gray-900 mb-4">Create Assignment</h1>
+
+            <form action="google.com" method="post" enctype="multipart/form-data" class="space-y-4">
+                {# If you're using Flask-WTF include the csrf token #}
+                {% if csrf_token %}
+                    {{ csrf_token() }}
+                {% endif %}
+
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input id="title" name="title" type="text" required maxlength="255" placeholder="Assignment title"
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm shadow-sm
+                                  focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" name="description" rows="5" placeholder="Describe the assignment..." required
+                              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm shadow-sm
+                                     focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="filetype" class="block text-sm font-medium text-gray-700">Allowed file type</label>
+                        <select id="filetype" name="filetype"
+                                class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm shadow-sm
+                                       focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                            <option value="any">Any</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="zip">Archive (.zip)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="points" class="block text-sm font-medium text-gray-700">Points</label>
+                        <input id="points" name="points" type="number" min="0" step="1" value="100" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm shadow-sm
+                                      focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="attachment" class="block text-sm font-medium text-gray-700">Optional attachment (example file)</label>
+                    <input id="attachment" name="attachment" type="file" accept=".pdf,.docx,.zip"
+                           class="mt-2 block w-full text-sm text-gray-600 file:border-0 file:bg-white file:mr-4
+                                  file:py-2 file:px-4 file:rounded-md file:text-sm file:font-medium
+                                  file:bg-indigo-50 file:text-indigo-700">
+                    <p class="mt-1 text-xs text-gray-500">Allowed: .pdf, .docx, .zip — optional.</p>
+                </div>
+
+                <div>
+                    <label for="due_date" class="block text-sm font-medium text-gray-700">Due date &amp; time</label>
+                    <input id="due_date" name="due_date" type="datetime-local" required
+                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm shadow-sm
+                                  focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <a href="#" class="text-sm text-gray-600 hover:underline">Cancel</a>
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-md bg-indigo-600 hover:bg-indigo-700
+                                   px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2
+                                   focus:ring-indigo-300">
+                        Create Assignment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

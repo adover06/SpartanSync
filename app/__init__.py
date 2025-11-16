@@ -14,4 +14,6 @@ myapp_obj.config.from_mapping(
 
 db = SQLAlchemy(myapp_obj)
 
+myapp_obj.jinja_loader.searchpath.append(os.path.join(basedir, 'auth', 'templates'))
+
 from app import routes
