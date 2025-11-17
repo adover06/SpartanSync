@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,38 +10,6 @@
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-<aside class="fixed left-0 top-0 h-screen w-56 bg-gray-900 text-gray-100 shadow-lg p-4 overflow-auto z-40">
-        <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-100">Navigation</h2>
-        </div>
-
-        <nav aria-label="Sidebar" class="space-y-2">
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-house"></i>
-                </div>
-                <div class="text-sm font-medium">Home</div>
-            </a>
-
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-cog"></i>
-                </div>
-                <div class="text-sm font-medium">Settings</div>
-            </a>
-
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-envelope"></i>
-                </div>
-                <div class="text-sm font-medium">Messages</div>
-            </a>
-        </nav>
-    </aside>
-
-  <div class="text-center mb-6 mt-10 col-span-12 px-4">
-            <h1 class="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">Spartan LMS</h1>
-        </div>
 
     <div class="max-w-4xl mx-auto mt-8 px-4">
         <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
@@ -123,3 +93,4 @@
 </body>
 </html>
 
+{% endblock %}

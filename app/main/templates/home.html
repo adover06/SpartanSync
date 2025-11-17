@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,41 +10,11 @@
 <body class="min-h-screen bg-gray-100 font-inter">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-    <!-- Fixed Sidebar (always on the left) -->
-    <aside class="fixed left-0 top-0 h-screen w-56 bg-gray-900 text-gray-100 shadow-lg p-4 overflow-auto z-40">
-        <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-100">Navigation</h2>
-        </div>
-
-        <nav aria-label="Sidebar" class="space-y-2">
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-house"></i>
-                </div>
-                <div class="text-sm font-medium">Home</div>
-            </a>
-
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-cog"></i>
-                </div>
-                <div class="text-sm font-medium">Settings</div>
-            </a>
-
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                <div class="p-2 inline-flex items-center justify-center w-10 text-gray-200">
-                    <i class="fa fa-envelope"></i>
-                </div>
-                <div class="text-sm font-medium">Messages</div>
-            </a>
-        </nav>
-    </aside>
+   
 
     <!-- Page content shifted right by sidebar width (w-56 = 14rem) -->
     <div class="ml-56">
-        <div class="text-center mb-6 mt-10 col-span-12 px-4">
-            <h1 class="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">Spartan LMS</h1>
-        </div>
+        
 
         <main class="max-w-7xl mx-auto grid grid-cols-12 gap-6 py-6 px-4 w-full">
             <!-- Main classes / courses area (shifts left to sit next to fixed sidebar) -->
@@ -115,3 +88,5 @@
     </div>
 </body>
 </html>
+
+{% endblock %}
