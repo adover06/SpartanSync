@@ -1,18 +1,10 @@
 from flask import render_template
-from flask import redirect
-from flask import flash
-from app.forms import LoginForm
-from app import myapp_obj
-
-from flask import render_template
 from . import bp
 
 
-
-@myapp_obj.route("/")
-@myapp_obj.route("/index.html")
-
-@myapp_obj.route("/home")
+@bp.route("/")
+@bp.route("/index.html")
+@bp.route("/home")
 def home():
     tempData = {
         'title': 'Home Page',
@@ -85,11 +77,11 @@ def home():
 
 
 
-@myapp_obj.route("/assign")
+@bp.route("/assign")
 def assign():
     return render_template('assignmentcreate.html')
 
-@myapp_obj.route("/assignment")
+@bp.route("/assignment")
 def assignment():
     tempAssignment = {
         'title': 'Assignment 1: Introduction to Python',

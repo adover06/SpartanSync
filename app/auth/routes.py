@@ -13,7 +13,7 @@
 #    return render_template('login.html', form=form)
 #
 
-from flask import render_template, request, flash, redirect, url_for
+from flask import render_template, flash, redirect
 from . import bp
 from app.forms import LoginForm
 
@@ -29,5 +29,4 @@ def login():
         flash(f'Here are the input {form.username.data} and {form.password.data}')
         return redirect('/')
     
-    # Because the file is at app/auth/templates/auth/login.html:
-    return render_template("auth/login.html", form=form)
+    return render_template("login.html", form=form)
