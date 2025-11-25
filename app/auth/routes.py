@@ -1,6 +1,5 @@
-from flask import render_template, flash, redirect
-import flask
-from flask_login import login_user
+from flask import render_template, flash, redirect, url_for, request
+from flask_login import login_user, logout_user, login_required
 from . import bp
 from app.forms import LoginForm
 from app.forms import CreateAccountForm
@@ -26,26 +25,35 @@ def login():
 
 @bp.route("/createaccount", methods=["GET", "POST"])
 def create_account():
-
     form = CreateAccountForm()
     if form.validate_on_submit():
-        
-        
-        existing_user = User.query.filter(User.email == form.email.data).first()
-        print(f"Existing user: {existing_user}")
+        existing_user = User.query.filter(
+            (User.email == form.email.data) | (User.username == form.username.data)
+        ).first()
         if existing_user:
             flash("Username or email already exists. Please choose another.", "error")
             return render_template("createaccount.html", form=form)
-        
+
         new_user = User(
             username=form.username.data,
             email=form.email.data,
+            role=form.role.data,
         )
         new_user.set_password(form.password.data)
         db.session.add(new_user)
         db.session.commit()
-        
+
         flash("Account created successfully! Please log in.", "success")
         return redirect("/login")
 
     return render_template("createaccount.html", form=form)
+
+
+@bp.route("/logout", methods=["GET", "POST"])
+@login_required
+def logout():
+    if request.method == "POST":
+        logout_user()
+        flash("Signed out successfully.", "success")
+        return redirect(url_for("auth.login"))
+    return render_template("logout.html")

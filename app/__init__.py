@@ -28,7 +28,25 @@ def create_app(config_class="app.config.Config"):
     from .main import bp as main_bp
     app.register_blueprint(main_bp)
     
+    _ensure_sqlite_database(app)
+    
     return app
 
+
+def _ensure_sqlite_database(app):
+    """Create SQLite DB (if missing) the first time the app boots."""
+    uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    if not uri.startswith("sqlite"):
+        return
+
+    # Extract filesystem path from sqlite:/// URI
+    db_path = uri.replace("sqlite:///", "", 1)
+    if not os.path.isabs(db_path):
+        db_path = os.path.join(app.root_path, db_path)
+
+    if not os.path.exists(db_path):
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        with app.app_context():
+            db.create_all()
 
 
