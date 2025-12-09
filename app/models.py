@@ -11,7 +11,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="student")  # student, instructor, ta
 
     def set_password(self, password):
-        self.password = generate_password_hash(password)
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
