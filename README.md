@@ -6,7 +6,7 @@ Learning management system project for CMPE131 class.
 
 1. **Clone the repository** (if applicable) or navigate to the project directory:
 
-   cd CMPE131-LMS
+   cd SpartanSync
 
 2. **Create a virtual environment** (recommended):
 
@@ -84,8 +84,11 @@ Learning management system project for CMPE131 class.
 - Use `python create_db.py` anytime you want to wipe and rebuild tables locally.
 
 
-## Screenshot
+## Screenshots
 
-![Home Page Screenshot](screenshot.png)
+![Home Page Screenshot](screenshots/Dashboard.png)
+![Create_Assign](screenshots/create_assign.png)
+![Instructor_Annc](screenshots/instr_annc.png)
+![manage](screenshots/manage_class.png)
+![student](screenshots/student%20class.png)
 
-*Screenshot of the rendered home page showing the course cards and assignments sidebar.*
