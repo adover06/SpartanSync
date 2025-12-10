@@ -1,6 +1,6 @@
-# CMPE131-LMS
+# SpartanSync
 
-Learning management system project for CMPE131 class.
+A simpler learning management system.
 
 ## Installation
 
