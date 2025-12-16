@@ -39,6 +39,12 @@
                 <a href="{{ url_for('main.manage_classes') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
                     <span class="text-sm font-medium">My Classes</span>
                 </a>
+                {% if current_user.role == 'student' %}
+                <a href="{{ url_for('main.study_plan') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                    <span class="text-sm font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded px-2 py-1">AI Study Plan ✨</span>
+                </a>
+                {% endif %}
+
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
                         <span class="text-sm font-medium">Sign Out</span>

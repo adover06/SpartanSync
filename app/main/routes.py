@@ -484,3 +484,26 @@ def announcement_delete(announcement_id):
     db.session.commit()
     flash("Announcement deleted.", "success")
     return redirect(url_for("main.announcements"))
+
+@bp.route("/study-plan", methods=["GET", "POST"])
+@login_required
+def study_plan():
+    from app.main.gpt_client import ask_chatgpt
+
+    advice = None
+    if request.method == "POST":
+        assignments = Assignment.query.order_by(Assignment.due_date.asc()).all()
+        assignmentPrompt = ""
+        for assignment in assignments:
+            submitted = Submission.query.filter_by(
+                assignment_id=assignment.id,
+                student_id=current_user.id
+            ).first()
+            if not submitted:
+                assignmentPrompt += f"- {assignment.title}, due {assignment.due_date.strftime('%Y-%m-%d')}({assignment.points} points)\n"
+        question = request.form.get("topics", "").strip()
+        
+        advice = ask_chatgpt(question, assignmentPrompt)
+        return render_template("study_plan.html", advice=advice, prefill=question)
+       
+    return render_template("study_plan.html", advice=advice, prefill="")

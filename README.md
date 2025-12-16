@@ -19,6 +19,14 @@ A simpler learning management system.
 
    pip install -r requirements.txt
 
+5. **API Key**:
+
+   Go to [https://platform.openai.com/docs/quickstart], create a key and save it somewhere safe.
+
+5. **Enviroment Variables**:
+
+   Create a file called ".env" in the root directory and paste the following: OPENAI_API_KEY=(<)your openai key(>)
+
 ## Run
 
 1. **Make sure your virtual environment is activated** (see Installation step 3)
@@ -42,6 +50,7 @@ A simpler learning management system.
 - **Authentication & Roles** – WTForms login/signup with Student, TA, or Instructor roles plus a dedicated sign-out page.
 - **Dashboards** – Student dashboard tracks assignment status; instructor dashboard highlights upcoming items and ungraded submissions, with quick links into each course.
 - **Assignments & Rubrics** – Instructors can create/delete assignments, define rubric criteria, and grade submissions; TAs help grade and edit rubrics but cannot publish or delete assignments.
+- **AI-Generated Planner** - Uses OpenAI's module in python to create a simple study/work plan for completing assignments on time. It constructs a prompt from a series of db queries for assignments, submissions, and user customization.
 - **Announcements** – Course-scoped or general announcements with list/detail views, instructor-only creation/deletion, and course badges everywhere.
 - **Courses & Class Selection** – Instructors add courses; students choose which classes appear on the home page via “Manage My Classes”; every class card links to a course overview showing its assignments/announcements.
 - **Auto-provisioned SQLite DB** – Database tables are built automatically the first time the server runs.
@@ -86,6 +95,7 @@ A simpler learning management system.
 
 ## Screenshots
 
+![AI Study Plan](screenshots/ai_example.png)
 ![Home Page Screenshot](screenshots/Dashboard.png)
 ![Create_Assign](screenshots/create_assign.png)
 ![Instructor_Annc](screenshots/instr_annc.png)
