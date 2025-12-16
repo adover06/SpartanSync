@@ -81,3 +81,61 @@ class Announcement(db.Model):
 
     course = db.relationship("Course")
     author = db.relationship("User", foreign_keys=[created_by])
+
+
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=True)
+    is_group = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    participants = db.relationship(
+        "ConversationParticipant",
+        backref="conversation",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
+
+    messages = db.relationship(
+        "Message",
+        backref="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at",
+        lazy=True,
+    )
+
+    def last_message(self):
+        if not self.messages:
+            return None
+        return self.messages[-1]
+
+    def unread_count_for(self, user_id):
+        part = ConversationParticipant.query.filter_by(conversation_id=self.id, user_id=user_id).first()
+        if not part:
+            return 0
+        last_read = part.last_read_at
+        if not last_read:
+            # all messages are unread
+            return len(self.messages)
+        return sum(1 for m in self.messages if m.created_at > last_read)
+
+
+class ConversationParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversation.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    last_read_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship("User")
+
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversation.id"), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    edited_at = db.Column(db.DateTime, nullable=True)
+    deleted = db.Column(db.Boolean, default=False, nullable=False)
+
+    sender = db.relationship("User", foreign_keys=[sender_id])

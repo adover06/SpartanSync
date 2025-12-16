@@ -86,3 +86,16 @@ class CourseForm(FlaskForm):
 class ClassSelectionForm(FlaskForm):
     courses = SelectMultipleField('Select Classes', coerce=int)
     submit = SubmitField('Save Selection')
+
+
+class MessageForm(FlaskForm):
+    body = TextAreaField('Message', validators=[DataRequired()])
+    submit = SubmitField('Send')
+
+
+class NewConversationForm(FlaskForm):
+    # Use a SelectField so users can pick a recipient from a list
+    recipient_id = SelectField('Recipient', coerce=int, validators=[DataRequired()])
+    body = TextAreaField('Message', validators=[DataRequired()])
+    title = StringField('Title')
+    submit = SubmitField('Start Conversation')

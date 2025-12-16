@@ -12,6 +12,9 @@ from app.models import (
     Submission,
     Announcement,
     RubricCriterion,
+    Conversation,
+    ConversationParticipant,
+    Message,
 )
 from app.forms import (
     AssignmentForm,
@@ -21,6 +24,8 @@ from app.forms import (
     CourseForm,
     ClassSelectionForm,
 )
+from app.forms import MessageForm, NewConversationForm
+from app.models import User
 
 
 def _course_choices(include_general=True):
@@ -758,7 +763,12 @@ def announcement_delete(announcement_id):
 def study_plan():
     if not _require_roles("student"):
         return redirect(url_for("main.home"))
-    from app.main.gpt_client import ask_chatgpt
+    try:
+        from app.main.gpt_client import ask_chatgpt
+    except Exception:
+        # If the OpenAI client isn't available provide  fallback
+        def ask_chatgpt(question, prompt):
+            return "AI service currently unavailable."
 
     advice = None
     if request.method == "POST":
@@ -777,3 +787,85 @@ def study_plan():
         return render_template("study_plan.html", advice=advice, prefill=question)
        
     return render_template("study_plan.html", advice=advice, prefill="")
+
+
+@bp.route("/messages")
+@login_required
+def messages_inbox():
+    """List conversations for current user."""
+    parts = ConversationParticipant.query.filter_by(user_id=current_user.id).all()
+    conversations = [p.conversation for p in parts]
+    # sort by last message time
+    conversations.sort(key=lambda c: c.last_message().created_at if c.last_message() else c.created_at, reverse=True)
+    # build summary
+    summary = []
+    for c in conversations:
+        last = c.last_message()
+        summary.append({
+            "conversation": c,
+            "last_message": last,
+            "unread": c.unread_count_for(current_user.id),
+        })
+
+    return render_template("messages/inbox.html", conversations=summary)
+
+
+@bp.route("/messages/new", methods=["GET", "POST"])
+@login_required
+def messages_new():
+    form = NewConversationForm()
+    # populate recipient choices with users (exclude current user)
+    users = User.query.order_by(User.username).all()
+    form.recipient_id.choices = [(u.id, u.username) for u in users if u.id != current_user.id]
+    if form.validate_on_submit():
+        recipient_id = int(form.recipient_id.data)
+        title = form.title.data or None
+        conv = Conversation(title=title, is_group=False)
+        db.session.add(conv)
+        db.session.flush()
+
+        # add participants: sender and recipient
+        sender_part = ConversationParticipant(conversation_id=conv.id, user_id=current_user.id)
+        recipient_part = ConversationParticipant(conversation_id=conv.id, user_id=recipient_id)
+        db.session.add_all([sender_part, recipient_part])
+
+        # create initial message
+        msg = Message(conversation_id=conv.id, sender_id=current_user.id, body=form.body.data)
+        db.session.add(msg)
+        db.session.commit()
+        return redirect(url_for("main.messages_view", conv_id=conv.id))
+
+    # optionally accept ?recipient_id=.. query param
+    rid = request.args.get("recipient_id", type=int)
+    if rid and not form.recipient_id.data:
+        form.recipient_id.data = rid
+    # if user submitted the form but validation failed, show a helpful message
+    if request.method == 'POST' and not form.validate_on_submit():
+        flash('Could not start conversation. Please select a recipient and enter a message.', 'error')
+    return render_template("messages/new.html", form=form)
+
+
+@bp.route("/messages/<int:conv_id>", methods=["GET", "POST"])
+@login_required
+def messages_view(conv_id):
+    conv = Conversation.query.get_or_404(conv_id)
+    # ensure current user is a participant
+    part = ConversationParticipant.query.filter_by(conversation_id=conv.id, user_id=current_user.id).first()
+    if not part:
+        flash("You are not a participant in that conversation.", "error")
+        return redirect(url_for("main.messages_inbox"))
+
+    form = MessageForm()
+    if form.validate_on_submit():
+        msg = Message(conversation_id=conv.id, sender_id=current_user.id, body=form.body.data)
+        db.session.add(msg)
+        db.session.commit()
+        return redirect(url_for("main.messages_view", conv_id=conv.id))
+
+    # mark read
+    from datetime import datetime
+    part.last_read_at = datetime.utcnow()
+    db.session.commit()
+
+    messages = conv.messages
+    return render_template("messages/view.html", conversation=conv, messages=messages, form=form)
