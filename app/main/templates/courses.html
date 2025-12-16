@@ -11,7 +11,7 @@
             <a href="{{ url_for('main.manage_classes') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 Manage My Classes
             </a>
-            {% if current_user.role in ['instructor', 'ta'] %}
+            {% if current_user.role == 'instructor' %}
                 <a href="{{ url_for('main.course_create') }}" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                     Add Course
                 </a>
@@ -38,7 +38,7 @@
     {% else %}
         <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
             No courses have been added yet.
-            {% if current_user.role in ['instructor', 'ta'] %}
+            {% if current_user.role == 'instructor' %}
                 <a href="{{ url_for('main.course_create') }}" class="text-blue-600 hover:underline">Create the first course.</a>
             {% endif %}
         </div>

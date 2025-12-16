@@ -4,5 +4,5 @@ app = create_app()
 
 with app.app_context():
     db.create_all()
-    print("✓ Database tables created successfully!")
-    print(f"✓ Database location: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    print("Database tables created successfully!")
+    print(f"Database location: {app.config['SQLALCHEMY_DATABASE_URI']}")

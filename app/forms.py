@@ -41,6 +41,15 @@ class AssignmentForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
     course = SelectField('Course', coerce=int, validators=[InputRequired()])
+    category = SelectField(
+        'Category',
+        choices=[
+            ('homework', 'Homework'),
+            ('exam', 'Exam'),
+            ('project', 'Project'),
+        ],
+        validators=[DataRequired()],
+    )
     due_date = DateTimeLocalField('Due Date', validators=[DataRequired()], format="%Y-%m-%dT%H:%M")
     points = IntegerField('Points', validators=[DataRequired(), NumberRange(min=0)])
     allow_submissions = BooleanField('Allow Submissions', default=True)

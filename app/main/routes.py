@@ -46,7 +46,8 @@ def _selected_course_ids(user_id):
     return selected
 
 
-def _build_class_cards(user_id):
+def _build_class_cards(user_id, include_grades=False):
+
     classes_record = Classes.query.filter_by(user=user_id).first()
     if not classes_record or not classes_record.classes:
         return []
@@ -61,6 +62,7 @@ def _build_class_cards(user_id):
                     "course_code": entry.get("course_code", ""),
                     "description": entry.get("description", ""),
                     "link": link,
+                    "grade_info": None,
                 }
             )
         else:
@@ -75,12 +77,18 @@ def _build_class_cards(user_id):
             if course_id:
                 course = Course.query.get(course_id)
                 if course:
+                    grade_info = None
+                    if include_grades:
+                        grade_info = _calculate_weighted_grade(user_id, course_id)
+
                     cards.append(
                         {
                             "title": course.course_name,
                             "course_code": course.course_code,
                             "description": course.description or "",
                             "link": url_for("main.course_detail", course_id=course.id),
+                            "course_id": course.id,
+                            "grade_info": grade_info,
                         }
                     )
     return cards
@@ -110,12 +118,115 @@ def _require_roles(*roles):
     return True
 
 
+def _calculate_weighted_grade(student_id, course_id):
+
+    from flask import current_app
+
+    weights = current_app.config.get('GRADE_WEIGHTS', {
+        "homework": 30,
+        "exam": 50,
+        "project": 20,
+    })
+
+    assignments = Assignment.query.filter_by(course_id=course_id).all()
+    if not assignments:
+        return {'grade': None, 'category_grades': {}, 'has_grades': False}
+
+    # get the submissions for these assignments
+    assignment_ids = [a.id for a in assignments]
+    submissions = Submission.query.filter(
+        Submission.assignment_id.in_(assignment_ids),
+        Submission.student_id == student_id,
+        Submission.status == "Graded"
+    ).all()
+
+    if not submissions:
+        return {'grade': None, 'category_grades': {}, 'has_grades': False}
+
+    # map of assignment_id -> submission
+    sub_map = {s.assignment_id: s for s in submissions}
+
+    # calculate per category scores
+    category_data = {}
+    for cat in weights.keys():
+        category_data[cat] = {'earned': 0, 'possible': 0}
+
+    for assignment in assignments:
+        cat = assignment.category if assignment.category in weights else 'homework'
+        sub = sub_map.get(assignment.id)
+        if sub and sub.score is not None:
+            category_data[cat]['earned'] += sub.score
+            category_data[cat]['possible'] += assignment.points
+
+    # calculate the weighted average
+    total_weighted = 0
+    total_weight_used = 0
+    category_grades = {}
+
+    for cat, data in category_data.items():
+        if data['possible'] > 0:
+            percentage = (data['earned'] / data['possible']) * 100
+            category_grades[cat] = {
+                'earned': data['earned'],
+                'possible': data['possible'],
+                'percentage': round(percentage, 1),
+            }
+            total_weighted += percentage * weights[cat]
+            total_weight_used += weights[cat]
+
+    # normalize all the categories if not all the categories have grades in
+    if total_weight_used > 0:
+        final_grade = total_weighted / total_weight_used
+    else:
+        final_grade = None
+
+    return {
+        'grade': round(final_grade, 1) if final_grade is not None else None,
+        'category_grades': category_grades,
+        'has_grades': total_weight_used > 0,
+    }
+
+
 @bp.route("/")
 @bp.route("/home")
 @login_required
 def home():
-    assignments = Assignment.query.order_by(Assignment.due_date.asc()).limit(5).all()
-    announcements = Announcement.query.order_by(Announcement.created_at.desc()).limit(3).all()
+    # get ALL courses
+    all_courses = Course.query.order_by(Course.course_name.asc()).all()
+
+    # get enrolled course IDs
+    enrolled_ids = set(_selected_course_ids(current_user.id))
+
+    # build course cards with enrollment status
+    courses_payload = []
+    for course in all_courses:
+        is_enrolled = course.id in enrolled_ids
+        grade_info = None
+        if is_enrolled and current_user.role == "student":
+            grade_info = _calculate_weighted_grade(current_user.id, course.id)
+
+        courses_payload.append({
+            "title": course.course_name,
+            "course_code": course.course_code,
+            "description": course.description or "",
+            "link": url_for("main.course_detail", course_id=course.id),
+            "course_id": course.id,
+            "is_enrolled": is_enrolled,
+            "grade_info": grade_info,
+        })
+
+    # filter assignments by enrolled courses for students
+    if current_user.role == "student" and enrolled_ids:
+        assignments = Assignment.query.filter(
+            (Assignment.course_id.in_(enrolled_ids)) | (Assignment.course_id.is_(None))
+        ).order_by(Assignment.due_date.asc()).limit(8).all()
+
+        announcements = Announcement.query.filter(
+            (Announcement.course_id.in_(enrolled_ids)) | (Announcement.course_id.is_(None))
+        ).order_by(Announcement.created_at.desc()).limit(5).all()
+    else:
+        assignments = Assignment.query.order_by(Assignment.due_date.asc()).limit(8).all()
+        announcements = Announcement.query.order_by(Announcement.created_at.desc()).limit(5).all()
 
     submissions = {}
     if current_user.role == "student":
@@ -127,10 +238,9 @@ def home():
             assignment, submissions.get(assignment.id)
         )
 
-    classes_payload = _build_class_cards(current_user.id)
     return render_template(
         'home.html',
-        classes=classes_payload,
+        courses=courses_payload,
         assignments=assignments,
         announcements=announcements,
     )
@@ -139,18 +249,42 @@ def home():
 @bp.route("/dashboard")
 @login_required
 def dashboard():
-    if current_user.role in ["instructor", "ta"]:
-        assignments = Assignment.query.filter_by(created_by=current_user.id).order_by(Assignment.due_date).all()
+    if current_user.role == "instructor":
+        assignments = Assignment.query.filter_by(
+            created_by=current_user.id
+        ).order_by(Assignment.due_date).all()
+
         pending_submissions = Submission.query.join(Assignment).filter(
             Assignment.created_by == current_user.id,
             Submission.status != "Graded",
         ).all()
+
         return render_template(
             "dashboard.html",
             mode="instructor",
             assignments=assignments,
             pending_submissions=pending_submissions,
         )
+
+    elif current_user.role == "ta":
+        ta_course_ids = _selected_course_ids(current_user.id)
+
+        assignments = Assignment.query.filter(
+            Assignment.course_id.in_(ta_course_ids)
+        ).order_by(Assignment.due_date).all()
+
+        pending_submissions = Submission.query.join(Assignment).filter(
+            Assignment.course_id.in_(ta_course_ids),
+            Submission.status != "Graded",
+        ).all()
+
+        return render_template(
+            "dashboard.html",
+            mode="instructor",
+            assignments=assignments,
+            pending_submissions=pending_submissions,
+        )
+
     else:
         assignments = Assignment.query.order_by(Assignment.due_date.asc()).all()
         submissions = Submission.query.filter_by(student_id=current_user.id).all()
@@ -254,30 +388,31 @@ def course_create():
 @login_required
 def manage_classes():
     form = ClassSelectionForm()
-    course_choices = _course_choices(include_general=False)
-    if not course_choices:
+
+    # get all courses
+    courses = Course.query.order_by(Course.course_name).all()
+    if not courses:
         flash("No courses available yet. Please ask an instructor to add one.", "error")
         return redirect(url_for("main.courses"))
 
-    form.courses.choices = course_choices
-    current_selection = _selected_course_ids(current_user.id)
-    if request.method == "GET":
-        form.courses.data = current_selection
+    # get currently selected course IDs
+    selected_ids = set(_selected_course_ids(current_user.id))
 
-    if form.validate_on_submit():
-        selection = form.courses.data or []
+    if request.method == "POST":
+        # get selected course IDs from checkboxes
+        selected_course_ids = request.form.getlist("courses", type=int)
+
         record = Classes.query.filter_by(user=current_user.id).first()
         if not record:
-            record = Classes(user=current_user.id, classes=selection)
+            record = Classes(user=current_user.id, classes=selected_course_ids)
             db.session.add(record)
         else:
-            record.classes = selection
+            record.classes = selected_course_ids
         db.session.commit()
-        flash("Classes updated.", "success")
+        flash("Enrollment updated successfully.", "success")
         return redirect(url_for("main.home"))
 
-    courses = Course.query.filter(Course.id.in_([c[0] for c in course_choices])).order_by(Course.course_name).all()
-    return render_template("classes_manage.html", form=form, courses=courses)
+    return render_template("classes_manage.html", form=form, courses=courses, selected_ids=selected_ids)
 
 
 @bp.route("/assignments/new", methods=["GET", "POST"])
@@ -296,6 +431,7 @@ def assignment_create():
             description=form.description.data,
             due_date=form.due_date.data,
             points=form.points.data,
+            category=form.category.data,
             allow_submissions=form.allow_submissions.data,
             course_id=course_id,
             created_by=current_user.id,

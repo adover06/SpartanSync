@@ -37,6 +37,7 @@ class Assignment(db.Model):
     description = db.Column(db.Text, nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     points = db.Column(db.Integer, nullable=False, default=100)
+    category = db.Column(db.String(20), nullable=False, default="homework")  # added homework, exam, project
     status = db.Column(db.String(20), nullable=False, default="Published")
     allow_submissions = db.Column(db.Boolean, nullable=False, default=True)
     course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=True)

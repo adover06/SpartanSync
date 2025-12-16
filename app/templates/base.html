@@ -8,16 +8,11 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     </head>
     <body class="bg-gray-100 font-inter min-h-screen">
+        {% if current_user.is_authenticated %}
         <aside class="fixed left-0 top-0 h-screen w-60 bg-gray-900 text-gray-100 shadow-lg p-4 overflow-auto z-40 flex flex-col">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-center">Spartan Sync</h1>
-                <p class="text-center text-sm text-gray-400 mt-1">
-                    {% if current_user.is_authenticated %}
-                        {{ current_user.email }}
-                    {% else %}
-                        Guest user
-                    {% endif %}
-                </p>
+                <p class="text-center text-sm text-gray-400 mt-1">{{ current_user.email }}</p>
             </div>
 
             <nav aria-label="Sidebar" class="space-y-2 flex-1">
@@ -36,21 +31,20 @@
                 <a href="{{ url_for('main.courses') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
                     <span class="text-sm font-medium">Courses</span>
                 </a>
-                <a href="{{ url_for('main.manage_classes') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                    <span class="text-sm font-medium">My Classes</span>
-                </a>
                 {% if current_user.role == 'student' %}
+                <a href="{{ url_for('main.manage_classes') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                    <span class="text-sm font-medium">My Enrollment</span>
+                </a>
                 <a href="{{ url_for('main.study_plan') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                    <span class="text-sm font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded px-2 py-1">AI Study Plan ✨</span>
+                    <span class="text-sm font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded px-2 py-1">AI Study Plan</span>
                 </a>
                 {% endif %}
 
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
-                        <span class="text-sm font-medium">Sign Out</span>
-                    </a>
-                {% endif %}
-                {% if current_user.is_authenticated and current_user.role == 'instructor' %}
+                <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800">
+                    <span class="text-sm font-medium">Sign Out</span>
+                </a>
+
+                {% if current_user.role == 'instructor' %}
                     <div class="mt-6 pt-4 border-t border-gray-800">
                         <p class="text-xs uppercase tracking-wide text-gray-400">Instructor Tools</p>
                         <a href="{{ url_for('main.assignment_create') }}" class="mt-2 block px-3 py-2 bg-indigo-600 text-sm text-center rounded hover:bg-indigo-500">
@@ -60,22 +54,28 @@
                             New Announcement
                         </a>
                     </div>
+                {% elif current_user.role == 'ta' %}
+                    <div class="mt-6 pt-4 border-t border-gray-800">
+                        <p class="text-xs uppercase tracking-wide text-gray-400">TA Tools</p>
+                        <a href="{{ url_for('main.dashboard') }}" class="mt-2 block px-3 py-2 bg-purple-600 text-sm text-center rounded hover:bg-purple-500">
+                            View Submissions
+                        </a>
+                    </div>
                 {% endif %}
             </nav>
 
             <div class="mt-6 text-center text-sm text-gray-400">
-                {% if current_user.is_authenticated %}
-                    <span class="font-semibold capitalize">{{ current_user.role }}</span>
-                {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="text-indigo-300 hover:underline">Sign In</a>
-                {% endif %}
+                <span class="font-semibold uppercase">{{ current_user.role }}</span>
             </div>
         </aside>
 
         <main class="ml-60 p-6">
+        {% else %}
+        <main class="min-h-screen flex items-center justify-center p-6">
+        {% endif %}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="space-y-2 mb-6">
+                    <div class="space-y-2 mb-6 {% if not current_user.is_authenticated %}w-full max-w-md{% endif %}">
                         {% for category, message in messages %}
                             <div class="px-4 py-3 rounded {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }}">
                                 {{ message }}
@@ -88,4 +88,3 @@
         </main>
     </body>
 </html>
-
