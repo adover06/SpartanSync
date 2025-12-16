@@ -1,5 +1,6 @@
-from datetime import datetime
-from flask import render_template, redirect, flash, request, url_for
+from datetime import datetime, date, timedelta
+import calendar
+from flask import render_template, redirect, flash, request, url_for, Response
 from flask_login import login_required, current_user
 
 from . import bp
@@ -316,6 +317,137 @@ def assignment_list():
             assignment, submission_map.get(assignment.id)
         )
     return render_template("assignments_list.html", assignments=assignments)
+
+
+@bp.route("/calendar")
+@login_required
+def calendar_view():
+    """Server-rendered month calendar view of assignments."""
+    # allow year/month override via query params
+    year = request.args.get("year", type=int) or date.today().year
+    month = request.args.get("month", type=int) or date.today().month
+
+    # calculate month range
+    first_weekday, num_days = calendar.monthrange(year, month)
+    start = datetime(year, month, 1)
+    end = datetime(year, month, num_days, 23, 59, 59)
+
+    # fetch assignments; filter by year/month to avoid timezone edge-cases
+    all_assignments = Assignment.query.order_by(Assignment.due_date.asc()).all()
+    if current_user.role == "student":
+        enrolled = set(_selected_course_ids(current_user.id))
+        assignments = [a for a in all_assignments if (a.course_id is None or a.course_id in enrolled) and a.due_date.year == year and a.due_date.month == month]
+    else:
+        assignments = [a for a in all_assignments if a.due_date.year == year and a.due_date.month == month]
+
+    # group assignments by day (use date to avoid timezone/truncation issues)
+    events = {}
+    for a in assignments:
+        try:
+            day = a.due_date.date().day
+        except Exception:
+            day = a.due_date.day
+        events.setdefault(day, []).append(a)
+
+    # sort events for each day by due_date/time
+    for lst in events.values():
+        lst.sort(key=lambda x: x.due_date)
+
+    # build weeks grid (list of weeks, each week is list of day numbers or None)
+    start_offset = first_weekday  # monthrange uses Monday=0
+    days = [None] * start_offset + list(range(1, num_days + 1))
+    while len(days) % 7 != 0:
+        days.append(None)
+    weeks = [days[i : i + 7] for i in range(0, len(days), 7)]
+
+    prev_month = (date(year, month, 1) - timedelta(days=1)).replace(day=1)
+    next_month = (date(year, month, num_days) + timedelta(days=1)).replace(day=1)
+
+    # build a simple color palette per course present in this view
+    palette = [
+        "#ef4444",
+        "#f59e0b",
+        "#10b981",
+        "#3b82f6",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+    ]
+    course_ids = []
+    course_map = {}
+    for a in assignments:
+        if a.course and a.course.id not in course_ids:
+            course_ids.append(a.course.id)
+            course_map[a.course.id] = a.course
+
+    course_colors = {}
+    for idx, cid in enumerate(sorted(course_ids)):
+        course_colors[cid] = palette[idx % len(palette)]
+
+    return render_template(
+        "calendar.html",
+        year=year,
+        month=month,
+        weeks=weeks,
+        events=events,
+        prev_month=prev_month,
+        next_month=next_month,
+        course_colors=course_colors,
+        course_map=course_map,
+    )
+
+
+@bp.route("/calendar/export")
+@login_required
+def calendar_export():
+    """Export assignments as an iCalendar (.ics) file for the selected month or all upcoming."""
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
+
+    # choose assignments: if year/month provided, limit to that month; otherwise upcoming 90 days
+    all_assignments = Assignment.query.order_by(Assignment.due_date.asc()).all()
+    if year and month:
+        first_weekday, num_days = calendar.monthrange(year, month)
+        start = datetime(year, month, 1)
+        end = datetime(year, month, num_days, 23, 59, 59)
+    else:
+        start = datetime.utcnow()
+        end = start + timedelta(days=90)
+
+    if current_user.role == "student":
+        enrolled = set(_selected_course_ids(current_user.id))
+        assignments = [a for a in all_assignments if (a.course_id is None or a.course_id in enrolled) and start <= a.due_date <= end]
+    else:
+        assignments = [a for a in all_assignments if start <= a.due_date <= end]
+
+    # build simple ICS
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//SpartanSync//Assignments//EN",
+    ]
+
+    for a in assignments:
+        uid = f"assignment-{a.id}@spartansync.local"
+        dtstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        dtstart = a.due_date.strftime("%Y%m%dT%H%M%SZ")
+        summary = (a.title or "Assignment").replace('\n', ' ').replace(';', ',')
+        description = (a.description or '').replace('\n', '\\n').replace(';', ',')
+        lines.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{dtstamp}",
+            f"DTSTART:{dtstart}",
+            f"SUMMARY:{summary}",
+            f"DESCRIPTION:{description}",
+            "END:VEVENT",
+        ])
+
+    lines.append("END:VCALENDAR")
+    ics_content = "\r\n".join(lines)
+
+    filename = f"assignments_{year or 'upcoming'}_{month or ''}.ics"
+    return Response(ics_content, mimetype="text/calendar", headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 
 @bp.route("/courses")
