@@ -160,6 +160,27 @@ class TestMainRoutes:
             })
             response = client.get('/classes/manage')
             assert response.status_code in [200, 302]
+    
+    def test_study_plan_page_for_student(self, client, student_user):
+        """Test study plan page for students only"""
+        with client:
+            client.post('/login', data={
+                'username': 'teststudent',
+                'password': 'password123'
+            })
+            response = client.get('/study-plan')
+            assert response.status_code in [200]
+        
+    def test_study_plan_page_for_instructor_denied(self, client, instructor_user):
+        """Test study plan page inaccessible to instructors"""
+        with client:
+            client.post('/login', data={
+                'username': 'testinstructor',
+                'password': 'password123'
+            })
+            response = client.get('/study-plan', follow_redirects=True)
+            assert response.status_code == 200
+            assert b"You do not have permission" in response.data
 
     def test_assignment_create_requires_instructor(self, client, student_user):
         """Test that assignment creation requires instructor role."""

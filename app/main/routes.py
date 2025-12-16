@@ -488,6 +488,8 @@ def announcement_delete(announcement_id):
 @bp.route("/study-plan", methods=["GET", "POST"])
 @login_required
 def study_plan():
+    if not _require_roles("student"):
+        return redirect(url_for("main.home"))
     from app.main.gpt_client import ask_chatgpt
 
     advice = None

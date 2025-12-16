@@ -12,13 +12,13 @@ SYSTEM_PROMPT = (
     "Use emojis and keep it concise. Also make sure to create new lines when needed rather than one long paragraph."
 )
 
-def ask_chatgpt(question: str, assignments: str) -> str:
-    """Send a question to ChatGPT and return the answer text."""
+def ask_chatgpt(comments: str, assignments: str) -> str:
+
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"{question}\n\nAssignments:\n{assignments}"}
+            {"role":"system", "content": SYSTEM_PROMPT},
+            {"role":"user", "content": f"{comments}\n\nAssignments:\n{assignments}"}
         ]
     )
     return response.choices[0].message.content
