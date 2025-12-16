@@ -21,11 +21,11 @@ A simpler learning management system.
 
 5. **API Key**:
 
-   Go to [https://platform.openai.com/docs/quickstart], create a key and save it somewhere safe.
+   Go to https://platform.openai.com/docs/quickstart, create a key and save it somewhere safe.
 
 5. **Enviroment Variables**:
 
-   Create a file called ".env" in the root directory and paste the following: OPENAI_API_KEY=(<)your openai key(>)
+   Create a file called ".env" in the root directory and paste the following: OPENAI_API_KEY=\<your openai key from above>
 
 ## Run
 
