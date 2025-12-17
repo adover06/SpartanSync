@@ -77,11 +77,10 @@
 
         <main class="ml-60 p-6">
         {% else %}
-        <main class="min-h-screen flex items-center justify-center p-6">
-        {% endif %}
+        <main class="min-h-screen p-6">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="space-y-2 mb-6 {% if not current_user.is_authenticated %}w-full max-w-md{% endif %}">
+                    <div class="space-y-2 mb-6 max-w-md mx-auto">
                         {% for category, message in messages %}
                             <div class="px-4 py-3 rounded {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }}">
                                 {{ message }}
@@ -90,7 +89,12 @@
                     </div>
                 {% endif %}
             {% endwith %}
+            <div class="min-h-[calc(100vh-8rem)] flex items-center justify-center">
+        {% endif %}
             {% block content %}{% endblock %}
+            {% if not current_user.is_authenticated %}
+            </div>
+            {% endif %}
         </main>
     </body>
 </html>

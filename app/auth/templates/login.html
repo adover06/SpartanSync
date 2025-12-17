@@ -37,12 +37,36 @@
             </div>
         </form>
 
-        <div class="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p class="text-sm text-gray-600">Don't have an account?</p>
-            <a href="/createaccount" class="mt-2 inline-block text-indigo-600 hover:text-indigo-700 font-medium">
-                Create Account
-            </a>
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-600 text-center mb-3">Try Demo Mode</p>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button type="button" onclick="loginDemo('demo-student1')" class="px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium">
+                    Student
+                </button>
+                <button type="button" onclick="loginDemo('demo-cs-instructor')" class="px-3 py-2 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium">
+                    Instructor
+                </button>
+                <button type="button" onclick="loginDemo('demo-cs-ta')" class="px-3 py-2 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium">
+                    TA
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 text-center mb-4">Quick login with demo accounts</p>
+
+            <div class="pt-4 border-t border-gray-200 text-center">
+                <p class="text-sm text-gray-600">Don't have an account?</p>
+                <a href="/createaccount" class="mt-2 inline-block text-indigo-600 hover:text-indigo-700 font-medium">
+                    Create Account
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+function loginDemo(username) {
+    document.querySelector('input[name="username"]').value = username;
+    document.querySelector('input[name="password"]').value = 'demo';
+    document.querySelector('form').submit();
+}
+</script>
 {% endblock %}
